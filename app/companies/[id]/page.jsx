@@ -22,7 +22,7 @@ const companies = [
     logo: "https://images.unsplash.com/photo-1549923746-c502d488b3ea?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1171&q=80",
     coverImage: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
     location: "San Francisco, CA",
-    industry: "Technology",
+    industry: "Technology", 
     size: "500-1000 employees",
     founded: "2010",
     website: "https://example.com",
@@ -79,4 +79,9 @@ const companies = [
       },
     ]
   }
-]
+];
+
+export default function CompanyPage({ params }) {
+  const company = companies.find(c => c.id === parseInt(params.id));
+  return null; // Add your JSX here
+}
