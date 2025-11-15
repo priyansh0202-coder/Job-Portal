@@ -1,22 +1,51 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { ModeToggle } from "@/components/mode-toggle";
 import { BriefcaseIcon, MenuIcon, XIcon } from "lucide-react";
+import { logout as authLogout, getStoredUser, isAuthenticated } from "@/services/authService";
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
 
-  const isActive = (path) => {
-    return pathname === path;
-  };
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    // initialize from localStorage on mount
+    setUser(getStoredUser());
+
+    // update when auth changes in same tab
+    const onAuthChanged = () => {
+      setUser(getStoredUser());
+    };
+
+    window.addEventListener("authChanged", onAuthChanged);
+    return () => {
+      window.removeEventListener("authChanged", onAuthChanged);
+    };
+  }, []);
+
+  const isActive = (path) => pathname === path;
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
+  };
+
+  const handleLogout = () => {
+    try {
+      authLogout();
+      // will also trigger authChanged -> this effect will setUser(null)
+      setUser(null);
+      setIsMenuOpen(false);
+      router.push("/");
+    } catch (err) {
+      console.log("Error logging out:", err);
+    }
   };
 
   return (
@@ -32,39 +61,58 @@ export default function Navbar() {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-6">
-            <Link 
-              href="/" 
+            <Link
+              href="/"
               className={`text-sm font-medium transition-colors hover:text-primary ${isActive('/') ? 'text-primary' : 'text-foreground'}`}
             >
               Home
             </Link>
-            <Link 
-              href="/jobs" 
+            <Link
+              href="/jobs"
               className={`text-sm font-medium transition-colors hover:text-primary ${isActive('/jobs') ? 'text-primary' : 'text-foreground'}`}
             >
               Jobs
             </Link>
-            <Link 
-              href="/companies" 
+            <Link
+              href="/companies"
               className={`text-sm font-medium transition-colors hover:text-primary ${isActive('/companies') ? 'text-primary' : 'text-foreground'}`}
             >
               Companies
             </Link>
-            <Link 
-              href="/admin/login" 
-              className={`text-sm font-medium transition-colors hover:text-primary ${isActive('/admin/login') ? 'text-primary' : 'text-foreground'}`}
-            >
-              Admin
-            </Link>
+            {/* show Admin link only if user is admin */}
+            {user?.role === "admin" ? (
+              <Link
+                href="/admin/dashboard"
+                className={`text-sm font-medium transition-colors hover:text-primary ${isActive('/admin/dashboard') ? 'text-primary' : 'text-foreground'}`}
+              >
+                Admin
+              </Link>
+            ) : (
+              <Link
+                href="/admin/login"
+                className={`text-sm font-medium transition-colors hover:text-primary ${isActive('/admin/login') ? 'text-primary' : 'text-foreground'}`}
+              >
+                Admin
+              </Link>
+            )}
           </nav>
 
           <div className="hidden md:flex items-center space-x-4">
             <ModeToggle />
-            <Link href="/admin/login">
-              <Button variant="outline" size="sm">
-                Employer Login
-              </Button>
-            </Link>
+            {isAuthenticated() && user ? (
+              <>
+                <span className="text-sm text-foreground">Hi, {user.name ?? user.email}</span>
+                <Button variant="outline" size="sm" onClick={handleLogout}>
+                  Logout
+                </Button>
+              </>
+            ) : (
+              <Link href="/admin/login">
+                <Button variant="outline" size="sm">
+                  Login
+                </Button>
+              </Link>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -85,39 +133,27 @@ export default function Navbar() {
       {isMenuOpen && (
         <div className="md:hidden border-t border-border">
           <div className="container mx-auto px-4 py-4 space-y-3">
-            <Link 
-              href="/" 
-              className={`block py-2 text-sm font-medium ${isActive('/') ? 'text-primary' : 'text-foreground'}`}
-              onClick={toggleMenu}
-            >
-              Home
-            </Link>
-            <Link 
-              href="/jobs" 
-              className={`block py-2 text-sm font-medium ${isActive('/jobs') ? 'text-primary' : 'text-foreground'}`}
-              onClick={toggleMenu}
-            >
-              Jobs
-            </Link>
-            <Link 
-              href="/companies" 
-              className={`block py-2 text-sm font-medium ${isActive('/companies') ? 'text-primary' : 'text-foreground'}`}
-              onClick={toggleMenu}
-            >
-              Companies
-            </Link>
-            <Link 
-              href="/admin/login" 
-              className={`block py-2 text-sm font-medium ${isActive('/admin/login') ? 'text-primary' : 'text-foreground'}`}
-              onClick={toggleMenu}
-            >
-              Admin
-            </Link>
-            <Link href="/admin/login" onClick={toggleMenu}>
-              <Button className="w-full" variant="outline" size="sm">
-                Employer Login
-              </Button>
-            </Link>
+            <Link href="/" onClick={toggleMenu} className={`block py-2 text-sm font-medium ${isActive('/') ? 'text-primary' : 'text-foreground'}`}>Home</Link>
+            <Link href="/jobs" onClick={toggleMenu} className={`block py-2 text-sm font-medium ${isActive('/jobs') ? 'text-primary' : 'text-foreground'}`}>Jobs</Link>
+            <Link href="/companies" onClick={toggleMenu} className={`block py-2 text-sm font-medium ${isActive('/companies') ? 'text-primary' : 'text-foreground'}`}>Companies</Link>
+
+            {user?.role === "admin" ? (
+              <Link href="/admin/dashboard" onClick={toggleMenu} className={`block py-2 text-sm font-medium ${isActive('/admin/dashboard') ? 'text-primary' : 'text-foreground'}`}>Admin</Link>
+            ) : (
+              <Link href="/admin/login" onClick={toggleMenu} className={`block py-2 text-sm font-medium ${isActive('/admin/login') ? 'text-primary' : 'text-foreground'}`}>Admin</Link>
+            )}
+
+            <div className="pt-2">
+              {isAuthenticated() && user ? (
+                <Button className="w-full" variant="outline" onClick={() => { toggleMenu(); handleLogout(); }}>
+                  Logout
+                </Button>
+              ) : (
+                <Link href="/admin/login" onClick={toggleMenu}>
+                  <Button className="w-full" variant="outline">Employer Login</Button>
+                </Link>
+              )}
+            </div>
           </div>
         </div>
       )}
