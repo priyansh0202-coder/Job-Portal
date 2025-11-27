@@ -6,7 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { ModeToggle } from "@/components/mode-toggle";
 import { BriefcaseIcon, MenuIcon, XIcon } from "lucide-react";
-import { logout as authLogout, getStoredUser, isAuthenticated } from "@/services/authService";
+import { logout as authLogout, getStoredUser, isAuthenticated,  } from "@/services/authService";
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -87,14 +87,7 @@ export default function Navbar() {
               >
                 Admin
               </Link>
-            ) : (
-              <Link
-                href="/admin/login"
-                className={`text-sm font-medium transition-colors hover:text-primary ${isActive('/admin/login') ? 'text-primary' : 'text-foreground'}`}
-              >
-                Admin
-              </Link>
-            )}
+            ) : null}
           </nav>
 
           <div className="hidden md:flex items-center space-x-4">

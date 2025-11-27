@@ -1,9 +1,25 @@
+"use client";
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { BriefcaseIcon, BuildingIcon, UsersIcon } from 'lucide-react';
 import FeaturedJobs from '@/components/featured-jobs';
+import { useAuth } from '../context/AuthContext';
+import { getJobs } from '../services/jobService';
+import { useEffect, useState } from 'react';
 
 export default function Home() {
+  const [jobs, setJobs] = useState([]);
+  const fetchJobs = async () => {
+    const data = await getJobs();
+    setJobs(data);
+  }
+  useEffect(() => {
+    fetchJobs();
+  }, []);
+
+  console.log(jobs);
+
+  const { user } = useAuth();
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Hero Section */}
@@ -22,11 +38,12 @@ export default function Home() {
                   Browse Jobs
                 </Button>
               </Link>
-              <Link href="/admin/login">
+              
+             {!user && <Link href="/admin/login">
                 <Button size="lg" variant="outline" className="w-full sm:w-auto">
                   Employer Login
                 </Button>
-              </Link>
+              </Link>}
             </div>
           </div>
           <div className="hidden md:block">
