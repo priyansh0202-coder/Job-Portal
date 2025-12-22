@@ -26,7 +26,7 @@ export default function FeaturedJobs() {
   };
 
   useEffect(() => {
-   setTimeout(() => fetchJobs(), 1000);
+    fetchJobs();
   }, []);
 
   const formatDate = (dateString) => {

@@ -12,6 +12,7 @@ export default function Home() {
   const fetchJobs = async () => {
     const data = await getJobs();
     setJobs(data);
+    const jobData = localStorage.setItem("jobs", JSON.stringify(data));
   }
   useEffect(() => {
     fetchJobs();

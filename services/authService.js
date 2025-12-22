@@ -1,97 +1,81 @@
+
 import apiInstance from "./apiInstance";
 
-
 /**
- * Helper: store token & user in localStorage and set apiInstance default header
+ * Notify app when auth state changes
  */
-
 function notifyAuthChanged() {
     if (typeof window !== "undefined") {
         window.dispatchEvent(new Event("authChanged"));
     }
 }
 
-export function setToken(token) {
-    if (typeof window === "undefined") return;
-    if (token) {
-        localStorage.setItem("token", token);
-        apiInstance.defaults.headers.common = apiInstance.defaults.headers.common || {};
-        apiInstance.defaults.headers.common.Authorization = `Bearer ${token}`;
-    }
-}
+//   Register user/admin
+//  Backend sets HttpOnly cookie
 
-export function getToken() {
-    if (typeof window === "undefined") return null;
-    return localStorage.getItem("token");
-}
-
-export function removeToken() {
-    if (typeof window === "undefined") return;
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    if (apiInstance.defaults.headers.common) {
-        delete apiInstance.defaults.headers.common.Authorization;
-    }
-}
-
-/**
- * Auth apiInstance calls - each returns response.data, or throws axios error to be handled by caller.
- *
- * registerPayload = { name, email, password }  // for user
- * or { name, email, password, role: "admin", adminCode: "..." } // for admin
- */
 export async function register(registerPayload) {
-    const res = await apiInstance.post("/api/auth/register", registerPayload);
-    // Backend returns { user, token }
-    if (res?.data?.token) {
-        setToken(res.data.token);
-        if (typeof window !== "undefined") {
-            localStorage.setItem("user", JSON.stringify(res.data.user));
-        }
-        notifyAuthChanged();
-    }
-    return res.data;
-}
+    const res = await apiInstance.post(
+        "/api/auth/register",
+        registerPayload
+    );
 
-export async function login(loginPayload) {
-    const res = await apiInstance.post("/api/auth/login", loginPayload);
-    if (res?.data?.token) {
-        setToken(res.data.token);
-        if (typeof window !== "undefined") {
-            localStorage.setItem("user", JSON.stringify(res.data.user));
-        }
-        notifyAuthChanged();
-    }
-    return res.data;
-}
-
-export async function getMe() {
-    // GET /api/auth/me (protected)
-    const res = await apiInstance.get("/api/auth/me");
     if (res?.data?.user && typeof window !== "undefined") {
         localStorage.setItem("user", JSON.stringify(res.data.user));
         notifyAuthChanged();
     }
+
     return res.data;
 }
 
-export function logout() {
-    removeToken();
-    // Optionally notify backend if you implement token blacklist or logout endpoint
-    // return apiInstance.post("/apiInstance/auth/logout");
+/**
+ * Login
+ * Backend sets HttpOnly cookie
+ */
+export async function login(loginPayload) {
+    const res = await apiInstance.post(
+        "/api/auth/login",
+        loginPayload
+    );
+
+    if (res?.data?.user && typeof window !== "undefined") {
+        localStorage.setItem("user", JSON.stringify(res.data.user));
+        notifyAuthChanged();
+    }
+
+    return res.data;
 }
 
 /**
- * Convenience:
+ * Logout
+ * Backend clears cookie
  */
-export function isAuthenticated() {
-    return Boolean(getToken());
+export async function logout() {
+    try {
+        await apiInstance.post("/api/auth/logout");
+    } finally {
+        if (typeof window !== "undefined") {
+            localStorage.removeItem("user");
+            notifyAuthChanged();
+        }
+    }
 }
+
+/**
+ * =========================
+ * HELPERS
+ * =========================
+ */
 
 export function getStoredUser() {
     if (typeof window === "undefined") return null;
-    const u = localStorage.getItem("user");
-    return u ? JSON.parse(u) : null;
+    const user = localStorage.getItem("user");
+    return user ? JSON.parse(user) : null;
 }
 
-
+/**
+ * Cookie-based auth:
+ * We can't read token on frontend
+ */
+export function isAuthenticated() {
+    return Boolean(getStoredUser());
+}
