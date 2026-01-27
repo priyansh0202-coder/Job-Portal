@@ -36,8 +36,6 @@ export default function AdminLoginPage() {
     name: "",
     email: "",
     password: "",
-    isAdmin: false,
-    adminCode: "",
   });
 
   // Handle input changes
@@ -47,10 +45,10 @@ export default function AdminLoginPage() {
   };
 
   const handleRegisterChange = (e) => {
-    const { name, value, type, checked } = e.target;
+    const { name, value, type } = e.target;
     setRegisterData((prev) => ({
       ...prev,
-      [name]: type === "checkbox" ? checked : value,
+      [name]: value,
     }));
   };
 
@@ -74,12 +72,11 @@ export default function AdminLoginPage() {
         email: loginData.email,
         password: loginData.password,
       });
-      // <---- ADD THIS: update AuthContext immediately so Navbar updates without refresh
+
       if (typeof setUser === "function" && data?.user) {
         setUser(data.user);
       }
-
-
+      
       toast({
         title: "Login successful",
         description: `Welcome back${data.user?.name ? `, ${data.user.name}` : ""}!`,
@@ -109,7 +106,7 @@ export default function AdminLoginPage() {
     setIsLoading(true);
 
     try {
-      const { email, password, isAdmin, adminCode } = registerData;
+      const { email, password } = registerData;
 
       if (!email || !password || !registerData.name) {
         toast({
@@ -122,22 +119,8 @@ export default function AdminLoginPage() {
         return;
       }
 
-      if (isAdmin && !adminCode) {
-        toast({
-          variant: "warning",
-          title: "Admin code required",
-          position: "top",
-          description: "Please enter the admin invite code to register as admin.",
-        });
-        setIsLoading(false);
-        return;
-      }
 
       const payload = { name: registerData.name, email, password };
-      if (isAdmin) {
-        payload.role = "admin";
-        payload.adminCode = adminCode;
-      }
 
       const data = await register(payload);
       if (typeof setUser === "function" && data?.user) {
@@ -148,22 +131,17 @@ export default function AdminLoginPage() {
         title: "Registration successful",
         position: "top",
         variant: "success",
-        description: `Registered as ${data.user?.role || "user"}.`,
       });
 
       setRegisterData({
         name: "",
         email: "",
         password: "",
-        isAdmin: false,
-        adminCode: "",
       });
 
-      if (data.user?.role === "admin") {
-        router.push("/admin/dashboard");
-      } else {
+      if (data.user) {
         router.push("/");
-      }
+      } 
     } catch (err) {
       const msg =
         err?.response?.data?.error || err?.message || "Unable to register";
@@ -312,7 +290,7 @@ export default function AdminLoginPage() {
                   </div>
 
                   {/* Admin toggle */}
-                  <div className="flex items-center gap-2">
+                  {/* <div className="flex items-center gap-2">
                     <input
                       id="isAdmin"
                       name="isAdmin"
@@ -324,10 +302,10 @@ export default function AdminLoginPage() {
                     <label htmlFor="isAdmin" className="text-sm">
                       Register as admin
                     </label>
-                  </div>
+                  </div> */}
 
                   {/* Admin code input */}
-                  {registerData.isAdmin && (
+                  {/* {registerData.isAdmin && (
                     <div className="space-y-2">
                       <Label htmlFor="adminCode">Admin Invite Code</Label>
                       <Input
@@ -338,7 +316,7 @@ export default function AdminLoginPage() {
                         onChange={handleRegisterChange}
                       />
                     </div>
-                  )}
+                  )} */}
                 </CardContent>
                 <CardFooter>
                   <Button type="submit" className="w-full" disabled={isLoading}>
