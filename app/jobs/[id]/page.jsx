@@ -10,7 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { applyJob, getApplyStatus } from "@/services/jobApplicationService";
-import { getJobs } from "@/services/jobService";
+import { getJobs, deleteJob } from "@/services/jobService";
 import { useAuth } from "@/context/AuthContext";
 import {
   BuildingIcon,
@@ -24,7 +24,9 @@ import {
   ShareIcon,
   BookmarkIcon,
   UploadIcon,
-  XIcon
+  XIcon,
+  PencilIcon,
+  Trash2Icon
 } from "lucide-react";
 
 /* ------------------- helpers ------------------- */
@@ -63,6 +65,7 @@ export default function JobDetailPageClient() {
   const [showApplicationModal, setShowApplicationModal] = useState(false);
   const [resumeFile, setResumeFile] = useState(null);
   const [coverLetter, setCoverLetter] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
 
 
   useEffect(() => {
@@ -142,6 +145,30 @@ export default function JobDetailPageClient() {
     } finally {
       setIsApplying(false);
     }
+  };
+
+  // Handler to delete a job (admin only)
+  const handleDeleteJob = async () => {
+    if (!confirm("Are you sure you want to delete this job? This action cannot be undone.")) {
+      return;
+    }
+
+    try {
+      setIsDeleting(true);
+      await deleteJob(job.id, false); // soft delete by default
+      alert("Job deleted successfully!");
+      router.push("/jobs");
+    } catch (err) {
+      console.error("Failed to delete job", err);
+      alert(err?.response?.data?.error || "Failed to delete job");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  // Handler to navigate to edit page (admin only)
+  const handleEditJob = () => {
+    router.push(`/admin/jobs/${job.id}/edit`);
   };
 
   if (loading) {
@@ -282,6 +309,34 @@ export default function JobDetailPageClient() {
               </p>
             </CardContent>
           </Card>
+
+          {/* Admin-only Edit and Delete buttons */}
+          {isAdmin && (
+            <Card>
+              <CardContent className="p-6">
+                <h3 className="text-lg font-semibold mb-4">Admin Actions</h3>
+                <div className="space-y-3">
+                  <Button
+                    variant="secondary"
+                    className="w-full flex items-center justify-center gap-2"
+                    onClick={handleEditJob}
+                  >
+                    <PencilIcon className="h-4 w-4" />
+                    Edit Job
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    className="w-full flex items-center justify-center gap-2"
+                    onClick={handleDeleteJob}
+                    disabled={isDeleting}
+                  >
+                    <Trash2Icon className="h-4 w-4" />
+                    {isDeleting ? "Deleting..." : "Delete Job"}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           <Card>
             <CardContent className="p-6">

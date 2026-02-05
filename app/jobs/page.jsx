@@ -6,9 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { BuildingIcon, MapPinIcon, BanknoteIcon, CalendarIcon, SearchIcon, FilterIcon } from "lucide-react";
+import { BuildingIcon, MapPinIcon, BanknoteIcon, CalendarIcon, SearchIcon, FilterIcon, PencilIcon, Trash2Icon } from "lucide-react";
 import Link from "next/link";
-import { getJobs } from "@/services/jobService";
+import { useRouter } from "next/navigation";
+import { getJobs, deleteJob } from "@/services/jobService";
+import { useAuth } from "@/context/AuthContext";
 
 /* ----------------------- helpers ----------------------- */
 
@@ -38,7 +40,12 @@ function toNumberSafe(v) {
 /* ----------------------- component ----------------------- */
 
 export default function JobsPage() {
+  const router = useRouter();
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
+
   const [jobs, setJobs] = useState([]);
+  const [deletingJobId, setDeletingJobId] = useState(null);
 
   // Filters / search state
   const [search, setSearch] = useState("");
@@ -83,6 +90,36 @@ export default function JobsPage() {
     };
     fetchJobs();
   }, []);
+
+  // Handler to delete a job (admin only)
+  const handleDeleteJob = async (jobId, e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!confirm("Are you sure you want to delete this job? This action cannot be undone.")) {
+      return;
+    }
+
+    try {
+      setDeletingJobId(jobId);
+      await deleteJob(jobId, false); // soft delete by default
+      // Remove from local state
+      setJobs((prev) => prev.filter((j) => j.id !== jobId));
+      alert("Job deleted successfully!");
+    } catch (err) {
+      console.error("Failed to delete job", err);
+      alert(err?.response?.data?.error || "Failed to delete job");
+    } finally {
+      setDeletingJobId(null);
+    }
+  };
+
+  // Handler to navigate to edit page (admin only)
+  const handleEditJob = (jobId, e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    router.push(`/admin/jobs/${jobId}/edit`);
+  };
 
   // debounce search (300ms)
   useEffect(() => {
@@ -589,10 +626,35 @@ export default function JobsPage() {
                   </div>
                 </CardContent>
 
-                <CardFooter>
+                <CardFooter className="flex flex-col gap-2">
                   <Link href={`/jobs/${id}`} className="w-full">
                     <Button variant="outline" className="w-full">View Details</Button>
                   </Link>
+
+                  {/* Admin-only Edit and Delete buttons */}
+                  {isAdmin && (
+                    <div className="flex gap-2 w-full">
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        className="flex-1 flex items-center justify-center gap-1"
+                        onClick={(e) => handleEditJob(id, e)}
+                      >
+                        <PencilIcon className="h-4 w-4" />
+                        Edit
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        className="flex-1 flex items-center justify-center gap-1"
+                        onClick={(e) => handleDeleteJob(id, e)}
+                        disabled={deletingJobId === id}
+                      >
+                        <Trash2Icon className="h-4 w-4" />
+                        {deletingJobId === id ? "Deleting..." : "Delete"}
+                      </Button>
+                    </div>
+                  )}
                 </CardFooter>
               </Card>
             );
