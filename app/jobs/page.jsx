@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { BuildingIcon, MapPinIcon, BanknoteIcon, CalendarIcon, SearchIcon, FilterIcon } from "lucide-react";
 import Link from "next/link";
+import { getJobs } from "@/services/jobService";
 
 /* ----------------------- helpers ----------------------- */
 
@@ -23,21 +24,6 @@ const formatDate = (dateString) => {
   if (diffDays === 1) return "Yesterday";
   return `${diffDays} days ago`;
 };
-
-function readJobsFromLocalStorage() {
-  try {
-    const raw = localStorage.getItem("jobs");
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed)) return parsed;
-    if (parsed && Array.isArray(parsed.data)) return parsed.data;
-    if (parsed && Array.isArray(parsed.jobs)) return parsed.jobs;
-    return [];
-  } catch (err) {
-    console.error("Failed to parse jobs from localStorage", err);
-    return [];
-  }
-}
 
 function normalizeString(s) {
   return (s ?? "").toString().toLowerCase();
@@ -85,8 +71,17 @@ export default function JobsPage() {
 
   // load once
   useEffect(() => {
-    const fromStorage = readJobsFromLocalStorage();
-    setJobs(fromStorage);
+    const fetchJobs = async () => {
+      try {
+        const data = await getJobs();
+        const jobsArray = Array.isArray(data?.jobs) ? data.jobs : [];
+        setJobs(jobsArray);
+      } catch (err) {
+        console.error("Failed to fetch jobs", err);
+        setJobs([]);
+      }
+    };
+    fetchJobs();
   }, []);
 
   // debounce search (300ms)

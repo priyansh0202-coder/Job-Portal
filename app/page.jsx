@@ -1,111 +1,4 @@
-// "use client";
-// import Link from 'next/link';
-// import { Button } from '@/components/ui/button';
-// import { BriefcaseIcon, BuildingIcon, UsersIcon } from 'lucide-react';
-// import FeaturedJobs from '@/components/featured-jobs';
-// import { useAuth } from '../context/AuthContext';
-// import { getJobs } from '../services/jobService';
-// import { useEffect, useState } from 'react';
 
-// export default function Home() {
-//   const [jobs, setJobs] = useState([]);
-//   const fetchJobs = async () => {
-//     const data = await getJobs();
-//     setJobs(data);
-//     const jobData = localStorage.setItem("jobs", JSON.stringify(data));
-//   }
-//   useEffect(() => {
-//     fetchJobs();
-//   }, []);
-
-//   console.log(jobs);
-
-//   const { user } = useAuth();
-//   return (
-//     <div className="container mx-auto px-4 py-8">
-//       {/* Hero Section */}
-//       <section className="py-12 md:py-20">
-//         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-//           <div className="space-y-6">
-//             <h1 className="text-4xl md:text-6xl font-bold tracking-tight">
-//               Find Your Dream Job <span className="text-primary">Today</span>
-//             </h1>
-//             <p className="text-lg text-muted-foreground">
-//               Connect with top employers and discover opportunities that match your skills and career goals.
-//             </p>
-//             <div className="flex flex-col sm:flex-row gap-4">
-//               <Link href="/jobs">
-//                 <Button size="lg" className="w-full sm:w-auto">
-//                   Browse Jobs
-//                 </Button>
-//               </Link>
-              
-//              {!user && <Link href="/admin/login">
-//                 <Button size="lg" variant="outline" className="w-full sm:w-auto">
-//                   Employer Login
-//                 </Button>
-//               </Link>}
-//             </div>
-//           </div>
-//           <div className="hidden md:block">
-//             <img
-//               src="https://images.unsplash.com/photo-1573497620053-ea5300f94f21?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80"
-//               alt="Job Search"
-//               className="rounded-lg shadow-xl"
-//             />
-//           </div>
-//         </div>
-//       </section>
-
-//       {/* Stats Section */}
-//       <section className="py-12 bg-muted/50 rounded-lg my-12">
-//         <div className="container mx-auto">
-//           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
-//             <div className="space-y-2">
-//               <div className="flex justify-center">
-//                 <BriefcaseIcon className="h-10 w-10 text-primary" />
-//               </div>
-//               <h3 className="text-3xl font-bold">1000+</h3>
-//               <p className="text-muted-foreground">Active Job Listings</p>
-//             </div>
-//             <div className="space-y-2">
-//               <div className="flex justify-center">
-//                 <BuildingIcon className="h-10 w-10 text-primary" />
-//               </div>
-//               <h3 className="text-3xl font-bold">500+</h3>
-//               <p className="text-muted-foreground">Companies</p>
-//             </div>
-//             <div className="space-y-2">
-//               <div className="flex justify-center">
-//                 <UsersIcon className="h-10 w-10 text-primary" />
-//               </div>
-//               <h3 className="text-3xl font-bold">10,000+</h3>
-//               <p className="text-muted-foreground">Job Seekers</p>
-//             </div>
-//           </div>
-//         </div>
-//       </section>
-
-//       {/* Featured Jobs Section */}
-//       <section className="py-12">
-//         <div className="text-center mb-10">
-//           <h2 className="text-3xl font-bold mb-4">Featured Job Opportunities</h2>
-//           <p className="text-muted-foreground max-w-2xl mx-auto">
-//             Explore our handpicked selection of top job opportunities from leading companies
-//           </p>
-//         </div>
-//         <FeaturedJobs />
-//         <div className="text-center mt-8">
-//           <Link href="/jobs">
-//             <Button variant="outline" size="lg">
-//               View All Jobs
-//             </Button>
-//           </Link>
-//         </div>
-//       </section>
-//     </div>
-//   );
-// }
 
 "use client";
 import { Button } from '@/components/ui/button';
@@ -167,41 +60,14 @@ export default function Home() {
             <SearchIcon className=" h-4 w-4" />
           </Button>
         </div>
-        <div className="w-full max-w-6xl mx-auto px-4 py-16 md:py-12">
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr,320px] gap-8 items-start">
-            <div className="space-y-8">
-              <div className="inline-block">
-                <span className="bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-semibold">
-                  #1 Job Portal in India
-                </span>
+        <div className="w-full max-w-6xl mx-auto px-4 py-8">
+          <div className="grid grid-cols-1 lg:grid-cols-[2fr,320px] gap-6 items-start">
+            {/* Featured Jobs Section - Left Side */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-2xl font-bold text-foreground">Featured Jobs</h2>
               </div>
-
-              <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-tight">
-                Find Your{" "}
-                <span className=" text-primary mt-2">Dream Career</span>
-              </h1>
-
-              <p className="text-lg md:text-xl text-muted-foreground max-w-lg">
-                Discover over 1000+ opportunities from top companies. Your next career move starts here.
-              </p>
-
-             
-
-              {/* Quick Stats */}
-              <div className="flex flex-wrap gap-6 pt-4">
-                <div className="flex items-center gap-2">
-                  <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse"></div>
-                  <span className="text-sm text-muted-foreground">1000+ active jobs</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="h-2 w-2 bg-blue-500 rounded-full animate-pulse"></div>
-                  <span className="text-sm text-muted-foreground">500+ companies hiring</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="h-2 w-2 bg-purple-500 rounded-full animate-pulse"></div>
-                  <span className="text-sm text-muted-foreground">Updated daily</span>
-                </div>
-              </div>
+              <FeaturedJobs />
             </div>
 
             {/* Profile Sidebar */}
@@ -467,36 +333,6 @@ export default function Home() {
                 <p className="text-sm text-muted-foreground">Successfully placed in their dream roles</p>
               </div>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Featured Jobs Section */}
-      <section className="py-16 md:py-24 bg-muted/30">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <div className="inline-block mb-4">
-              <span className="bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-semibold">
-                Hot Jobs 🔥
-              </span>
-            </div>
-            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-foreground">
-              Featured Job Opportunities
-            </h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              Handpicked roles from industry-leading companies. Apply now and take the next step in your career.
-            </p>
-          </div>
-
-          <FeaturedJobs />
-
-          <div className="text-center mt-12">
-            <Link href="/jobs">
-              <Button size="lg" variant="outline" className="rounded-xl px-8">
-                View All Jobs
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </Link>
           </div>
         </div>
       </section>

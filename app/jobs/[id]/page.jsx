@@ -7,6 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { applyJob, getApplyStatus } from "@/services/jobApplicationService";
+import { getJobs } from "@/services/jobService";
+import { useAuth } from "@/context/AuthContext";
 import {
   BuildingIcon,
   MapPinIcon,
@@ -17,30 +22,10 @@ import {
   GlobeIcon,
   ArrowLeftIcon,
   ShareIcon,
-  BookmarkIcon
+  BookmarkIcon,
+  UploadIcon,
+  XIcon
 } from "lucide-react";
-
-/* ------------------- mock jobs (fallback) ------------------- */
-const FALLBACK_JOBS = [
-  /* paste your mock jobs array here (or keep a small subset) */
-  {
-    id: 1,
-    title: "Frontend Developer",
-    company: "TechCorp",
-    location: "San Francisco, CA",
-    type: "Full-time",
-    category: "Engineering",
-    experience: "3-5 years",
-    salary: "$80,000 - $120,000",
-    postedDate: "2023-05-15",
-    applicationDeadline: "2023-06-15",
-    applicationLink: "https://example.com/apply",
-    logo: "https://images.unsplash.com/photo-1549923746-c502d488b3ea?ixlib=rb-4.0.3&auto=format&fit=crop&w=1171&q=80",
-    companyWebsite: "https://example.com",
-    description: `<p>We are looking for a skilled Frontend Developer to join our team. You will be responsible for building user interfaces and implementing interactive features for our web applications.</p>`,
-  },
-  // ... add other mock items or paste the full array you already have
-];
 
 /* ------------------- helpers ------------------- */
 const formatDateReadable = (dateString) => {
@@ -63,60 +48,101 @@ const formatDateRelative = (dateString) => {
   return `${diffDays} days ago`;
 };
 
-function readJobsFromLocalStorage() {
-  try {
-    const raw = localStorage.getItem("jobs");
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed)) return parsed;
-    if (parsed && Array.isArray(parsed.data)) return parsed.data;
-    if (parsed && Array.isArray(parsed.jobs)) return parsed.jobs;
-    return [];
-  } catch (err) {
-    console.error("Failed to parse jobs from localStorage", err);
-    return [];
-  }
-}
-
 /* ------------------- component ------------------- */
 export default function JobDetailPageClient() {
   const params = useParams(); // { id: '...' }
   const router = useRouter();
   const idParam = params?.id;
   const jobId = idParam ? Number(idParam) : null;
+  const { user } = useAuth();
 
   const [job, setJob] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [applied, setApplied] = useState(false);
+  const [isApplying, setIsApplying] = useState(false);
+  const [showApplicationModal, setShowApplicationModal] = useState(false);
+  const [resumeFile, setResumeFile] = useState(null);
+  const [coverLetter, setCoverLetter] = useState("");
+
 
   useEffect(() => {
-    // load job from localStorage (preferred) or fallback to mock
-    setLoading(true);
-    try {
-      const stored = readJobsFromLocalStorage();
-      let found = null;
-
-      if (Array.isArray(stored) && stored.length > 0) {
-        // job id in stored list may be number or string
-        found = stored.find((j) => {
-          const jid = j?.id ?? j?._id ?? j?.job_id;
-          if (jid === undefined || jid === null) return false;
-          return String(jid) === String(jobId);
-        });
+    // load job from API
+    const fetchJob = async () => {
+      setLoading(true);
+      try {
+        const data = await getJobs();
+        const jobsArray = Array.isArray(data?.jobs) ? data.jobs : [];
+        const found = jobsArray.find((j) => Number(j.id) === Number(jobId));
+        setJob(found || null);
+      } catch (err) {
+        console.error("Failed to fetch job", err);
+        setJob(null);
+      } finally {
+        setLoading(false);
       }
+    };
 
-      if (!found) {
-        // fallback to mock list
-        found = FALLBACK_JOBS.find((j) => Number(j.id) === Number(jobId));
-      }
-
-      setJob(found ?? null);
-    } catch (err) {
-      console.error(err);
-      setJob(null);
-    } finally {
-      setLoading(false);
+    if (jobId) {
+      fetchJob();
     }
   }, [jobId]);
+
+  useEffect(() => {
+    if (!job?.id || !user || user.role === 'admin' || user.role === 'recruiter') return;
+
+    const checkStatus = async () => {
+      try {
+        const res = await getApplyStatus(job.id);
+        setApplied(res.applied);
+      } catch (err) {
+        console.error("Failed to check apply status");
+      }
+    };
+    checkStatus();
+  }, [job?.id, user]);
+
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validate file type
+      const allowedTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/msword'];
+      if (!allowedTypes.includes(file.type)) {
+        alert('Only PDF and DOCX files are allowed');
+        return;
+      }
+      // Validate file size (5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('File size cannot exceed 5MB');
+        return;
+      }
+      setResumeFile(file);
+    }
+  };
+
+  const handleApply = async () => {
+    try {
+      setIsApplying(true);
+
+      const formData = new FormData();
+      if (resumeFile) {
+        formData.append('resume', resumeFile);
+      }
+      if (coverLetter.trim()) {
+        formData.append('coverLetter', coverLetter);
+      }
+
+      await applyJob(job.id, formData);
+      setApplied(true);
+      setShowApplicationModal(false);
+      setResumeFile(null);
+      setCoverLetter("");
+      alert("Application submitted successfully!");
+    } catch (err) {
+      alert(err?.response?.data?.message || "Already applied or error occurred");
+    } finally {
+      setIsApplying(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -144,6 +170,8 @@ export default function JobDetailPageClient() {
 
   // salary display fallback
   const salary = job.salary_text || job.salary || (job.salary_min && job.salary_max ? `${job.salary_min} - ${job.salary_max}` : "Not specified");
+
+  const isAdmin = user?.role === 'admin' || user?.role === 'recruiter';
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -229,9 +257,26 @@ export default function JobDetailPageClient() {
         <div className="space-y-6">
           <Card>
             <CardContent className="p-6">
-              <Button className="w-full mb-4" size="lg" asChild>
-                <a href={job.application_link ?? job.applicationLink} rel="noopener noreferrer">Apply Now</a>
-              </Button>
+              {isAdmin ? (
+                <Button
+                  className="w-full mb-4"
+                  size="lg"
+                  disabled
+                  variant="outline"
+                >
+                  Admins cannot apply
+                </Button>
+              ) : (
+                <Button
+                  className="w-full mb-4"
+                  size="lg"
+                  onClick={() => setShowApplicationModal(true)}
+                  disabled={applied || isApplying}
+                >
+                  {applied ? "Applied ✓" : "Apply Now"}
+                </Button>
+              )}
+
               <p className="text-sm text-muted-foreground text-center">
                 Application deadline: {formatDateReadable(applicationDeadline)}
               </p>
@@ -309,6 +354,98 @@ export default function JobDetailPageClient() {
           </Card>
         </div>
       </div>
+
+      {/* Application Modal */}
+      {showApplicationModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="relative w-full max-w-2xl bg-card rounded-lg p-6 mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-bold">Apply for {job.title}</h2>
+              <Button variant="ghost" size="icon" onClick={() => setShowApplicationModal(false)}>
+                <XIcon className="h-5 w-5" />
+              </Button>
+            </div>
+
+            <Separator className="mb-4" />
+
+            <div className="space-y-4">
+              {/* Resume Upload */}
+              <div className="space-y-2">
+                <Label htmlFor="resume" className="text-sm font-medium">
+                  Resume/CV (Optional)
+                </Label>
+                <div className="flex items-center gap-4">
+                  <input
+                    id="resume"
+                    type="file"
+                    accept=".pdf,.doc,.docx"
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
+                  <label
+                    htmlFor="resume"
+                    className="flex items-center justify-center gap-2 px-4 py-2 border border-border rounded-md cursor-pointer hover:bg-muted transition-colors"
+                  >
+                    <UploadIcon className="h-4 w-4" />
+                    <span className="text-sm">{resumeFile ? "Change File" : "Choose File"}</span>
+                  </label>
+                  {resumeFile && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-muted-foreground">{resumeFile.name}</span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setResumeFile(null)}
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Accepted formats: PDF, DOC, DOCX (Max 5MB)
+                </p>
+              </div>
+
+              {/* Cover Letter */}
+              <div className="space-y-2">
+                <Label htmlFor="coverLetter" className="text-sm font-medium">
+                  Cover Letter (Optional)
+                </Label>
+                <Textarea
+                  id="coverLetter"
+                  value={coverLetter}
+                  onChange={(e) => setCoverLetter(e.target.value)}
+                  placeholder="Tell us why you're a great fit for this position..."
+                  className="min-h-[150px]"
+                />
+                <p className="text-xs text-muted-foreground">
+                  {coverLetter.length} characters
+                </p>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 pt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowApplicationModal(false)}
+                  className="flex-1"
+                  disabled={isApplying}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleApply}
+                  className="flex-1"
+                  disabled={isApplying}
+                >
+                  {isApplying ? "Submitting..." : "Submit Application"}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
