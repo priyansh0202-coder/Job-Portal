@@ -15,26 +15,19 @@ import { ArrowLeftIcon, Loader2Icon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { getJobs, updateJob } from "@/services/jobService";
 
-/**
- * parseSalary: tries to parse a single salary string into numeric min/max and textual form.
- * Supports k (thousand), m (million), lakh/lac (100k), crore/cr (10M), currency symbols, commas.
- *
- * Returns: { min: number | null, max: number | null, text: string }
- */
+
+
 function parseSalary(raw) {
   if (!raw || typeof raw !== "string") return { min: null, max: null, text: "" };
 
   const s = raw.trim().toLowerCase();
 
-  // helper to convert numeric string and multiplier token into number in absolute rupees/dollars (no currency conversion).
   function parseNumberToken(numStr, token) {
     if (!numStr) return null;
-    // remove non-digit except dot and comma and possible trailing k/m
     let n = numStr.replace(/[^\d.]/g, "");
     if (!n) return null;
     let val = parseFloat(n.replace(/,/g, ""));
     if (isNaN(val)) return null;
-    // multiplier detection
     if (token) {
       token = token.toLowerCase();
       if (token === "k") val *= 1_000;
@@ -45,9 +38,6 @@ function parseSalary(raw) {
     return Math.round(val);
   }
 
-  // normalize separators like " - " or "to"
-  // try to capture two explicit numbers first
-  // regex finds tokens like "80k", "1,20,000", "5 lakh", "1 crore", "5 LPA", "₹120000"
   const numberRegex = /(\d[\d,\.]*)\\s*(k|m|lakh|lac|l|cr|crore|lpa)?/gi;
   const matches = [];
   let m;
@@ -55,7 +45,6 @@ function parseSalary(raw) {
     matches.push({ raw: m[0], num: m[1], token: m[2] || null, index: m.index });
   }
 
-  // helper to see if phrase indicates "up to" or "from"
   const hasUpTo = /\b(up to|upto|maximum|max|<=|less than|<)\b/.test(s);
   const hasFrom = /\b(from|minimum|min|>=|greater than|>|\bstarting\b)\b/.test(s);
   const hasPlus = /(\d[\d,\.]*\s*(k|m|lakh|lac|l|cr|crore)?\s*\+)|\babove\b|\bplus\b/.test(s);
@@ -64,11 +53,9 @@ function parseSalary(raw) {
   let max = null;
 
   if (matches.length >= 2) {
-    // pick first two numeric tokens by textual position
     const first = parseNumberToken(matches[0].num, matches[0].token);
     const second = parseNumberToken(matches[1].num, matches[1].token);
     if (first !== null && second !== null) {
-      // order by position: if second appears before first, swap
       if (matches[1].index < matches[0].index) {
         [min, max] = [second, first];
       } else {
@@ -84,14 +71,12 @@ function parseSalary(raw) {
       } else if (hasFrom || hasPlus) {
         min = num;
       } else {
-        // ambiguous single number — treat as min by default (e.g., "80k")
+
         min = num;
       }
     }
   }
 
-  // If we couldn't parse numeric values but the text contains numbers in words (e.g., "five lakh"), we could add more parsing,
-  // but for now capture the raw text as salary_text.
   const salary_text = raw.trim();
 
   return { min, max, text: salary_text };

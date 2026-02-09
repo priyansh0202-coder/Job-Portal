@@ -24,6 +24,7 @@ export default function Home() {
   }, []);
 
   const { user } = useAuth();
+  console.log(user, "userdata")
 
   const handleSearch = () => {
     window.location.href = `/jobs?search=${searchQuery}&location=${location}`;
@@ -86,9 +87,9 @@ export default function Home() {
                         </div>
                       </div>
                       <div>
-                        <h3 className="text-base font-bold text-foreground">PRIYANSH SONI</h3>
-                        <p className="text-xs text-muted-foreground">Software Developer</p>
-                        <p className="text-xs text-muted-foreground">@ Infusyx Services</p>
+                        <h3 className="text-base font-bold text-foreground">{user.name}</h3>
+                        {/* <p className="text-xs text-muted-foreground">{user.role}</p>
+                        <p className="text-xs text-muted-foreground">@ {user.company}</p> */}
                         <p className="text-xs text-muted-foreground/70 mt-1">Last updated yesterday</p>
                       </div>
                       <Button className="w-full rounded-lg" size="sm">
