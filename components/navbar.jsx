@@ -6,7 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { ModeToggle } from "@/components/mode-toggle";
 import { BriefcaseIcon, MenuIcon, XIcon } from "lucide-react";
-import { logout as authLogout, getStoredUser, isAuthenticated } from "@/services/authService";
+import { logout as authLogout, getStoredUser, isAuthenticated,  } from "@/services/authService";
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -87,14 +87,17 @@ export default function Navbar() {
               >
                 Admin
               </Link>
-            ) : (
+            ) : null}
+
+            {/* Show My Applications for logged in users (non-admin) */}
+            {user && user.role !== "admin" ? (
               <Link
-                href="/admin/login"
-                className={`text-sm font-medium transition-colors hover:text-primary ${isActive('/admin/login') ? 'text-primary' : 'text-foreground'}`}
+                href="/my-applications"
+                className={`text-sm font-medium transition-colors hover:text-primary ${isActive('/my-applications') ? 'text-primary' : 'text-foreground'}`}
               >
-                Admin
+                My Applications
               </Link>
-            )}
+            ) : null}
           </nav>
 
           <div className="hidden md:flex items-center space-x-4">
@@ -141,6 +144,10 @@ export default function Navbar() {
               <Link href="/admin/dashboard" onClick={toggleMenu} className={`block py-2 text-sm font-medium ${isActive('/admin/dashboard') ? 'text-primary' : 'text-foreground'}`}>Admin</Link>
             ) : (
               <Link href="/admin/login" onClick={toggleMenu} className={`block py-2 text-sm font-medium ${isActive('/admin/login') ? 'text-primary' : 'text-foreground'}`}>Admin</Link>
+            )}
+
+            {user && user.role !== "admin" && (
+              <Link href="/my-applications" onClick={toggleMenu} className={`block py-2 text-sm font-medium ${isActive('/my-applications') ? 'text-primary' : 'text-foreground'}`}>My Applications</Link>
             )}
 
             <div className="pt-2">
