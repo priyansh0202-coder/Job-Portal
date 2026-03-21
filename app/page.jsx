@@ -500,20 +500,21 @@ export default function Home() {
       {/* CTA Section */}
       <section className="py-16 md:py-24">
         <div className="container mx-auto px-4">
-          <div className="relative overflow-hidden bg-gradient-to-r from-primary to-primary/80 rounded-3xl p-12 md:p-16">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
-            <div className="absolute bottom-0 left-0 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
+          <div className="relative overflow-hidden bg-gradient-to-r from-slate-900 via-blue-950 to-slate-900 rounded-3xl p-12 md:p-16">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/15 rounded-full blur-3xl"></div>
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-400/10 rounded-full blur-3xl"></div>
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl"></div>
 
             <div className="relative z-10 max-w-3xl mx-auto text-center text-white">
               <h2 className="text-3xl md:text-5xl font-bold mb-6">
                 Ready to Find Your Dream Job?
               </h2>
-              <p className="text-lg md:text-xl mb-8 text-white/90">
+              <p className="text-lg md:text-xl mb-8 text-white/80">
                 Join thousands of professionals who've already found their perfect role through JobHub
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link href="/jobs">
-                  <Button size="lg" variant="secondary" className="w-full sm:w-auto rounded-xl px-8">
+                  <Button size="lg" className="w-full sm:w-auto rounded-xl px-8 bg-white text-slate-900 hover:bg-white/90 font-semibold">
                     Browse Jobs
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
