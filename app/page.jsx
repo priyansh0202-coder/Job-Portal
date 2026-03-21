@@ -2,17 +2,21 @@
 
 "use client";
 import { Button } from '@/components/ui/button';
-import { Briefcase, Building, Users, Search, MapPin, ArrowRight, TrendingUp, ShieldCheck, Clock, SearchCheck, SearchIcon } from 'lucide-react';
+import { Briefcase, Building, Users, Search, MapPin, ArrowRight, TrendingUp, ShieldCheck, Clock, SearchCheck, SearchIcon, X, BanknoteIcon, CalendarIcon } from 'lucide-react';
 import FeaturedJobs from '@/components/featured-jobs';
 import { useAuth } from '../context/AuthContext';
 import { getJobs } from '../services/jobService';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
+import { Badge } from '@/components/ui/badge';
 
 export default function Home() {
   const [jobs, setJobs] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [location, setLocation] = useState('');
+  const [activeSearch, setActiveSearch] = useState('');
+  const [activeLocation, setActiveLocation] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
 
   const fetchJobs = async () => {
     const data = await getJobs();
@@ -24,10 +28,56 @@ export default function Home() {
   }, []);
 
   const { user } = useAuth();
-  console.log(user, "userdata")
 
   const handleSearch = () => {
-    window.location.href = `/jobs?search=${searchQuery}&location=${location}`;
+    const trimmedSearch = searchQuery.trim();
+    const trimmedLocation = location.trim();
+    if (!trimmedSearch && !trimmedLocation) return;
+    setActiveSearch(trimmedSearch.toLowerCase());
+    setActiveLocation(trimmedLocation.toLowerCase());
+    setIsSearching(true);
+  };
+
+  const clearSearch = () => {
+    setSearchQuery('');
+    setLocation('');
+    setActiveSearch('');
+    setActiveLocation('');
+    setIsSearching(false);
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') handleSearch();
+  };
+
+  // Filter jobs based on active search criteria
+  const searchResults = useMemo(() => {
+    if (!isSearching) return [];
+    const jobsArray = Array.isArray(jobs?.jobs) ? jobs.jobs : (Array.isArray(jobs) ? jobs : []);
+    return jobsArray.filter((job) => {
+      const title = (job.title ?? job.job_title ?? '').toLowerCase();
+      const company = (job.company_name ?? job.company ?? '').toLowerCase();
+      const description = (job.description ?? '').toLowerCase();
+      const jobLocation = (job.location ?? job.city ?? '').toLowerCase();
+
+      const matchesSearch = !activeSearch || 
+        title.includes(activeSearch) || 
+        company.includes(activeSearch) || 
+        description.includes(activeSearch);
+
+      const matchesLocation = !activeLocation || 
+        jobLocation.includes(activeLocation);
+
+      return matchesSearch && matchesLocation;
+    });
+  }, [jobs, isSearching, activeSearch, activeLocation]);
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const diffDays = Math.ceil((Date.now() - date) / (1000 * 60 * 60 * 24));
+    if (diffDays <= 0) return 'Today';
+    if (diffDays === 1) return 'Yesterday';
+    return `${diffDays} days ago`;
   };
 
   return (
@@ -43,6 +93,7 @@ export default function Home() {
               placeholder="Job title, keyword, or company"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={handleKeyDown}
               className="flex-1 bg-transparent border-none outline-none text-foreground placeholder:text-muted-foreground"
             />
           </div>
@@ -53,22 +104,130 @@ export default function Home() {
               placeholder="City or remote"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
+              onKeyDown={handleKeyDown}
               className="flex-1 bg-transparent border-none outline-none text-foreground placeholder:text-muted-foreground"
             />
           </div>
+          {isSearching && (
+            <Button onClick={clearSearch} size="lg" variant="ghost" className="px-2 rounded-xl text-muted-foreground hover:text-foreground">
+              <X className="h-4 w-4" />
+            </Button>
+          )}
           <Button onClick={handleSearch} size="lg" className="px-2 rounded-xl">
-            
             <SearchIcon className=" h-4 w-4" />
           </Button>
         </div>
         <div className="w-full max-w-6xl mx-auto px-4 py-8">
           <div className="grid grid-cols-1 lg:grid-cols-[2fr,320px] gap-6 items-start">
-            {/* Featured Jobs Section - Left Side */}
+            {/* Featured Jobs / Search Results Section - Left Side */}
             <div className="space-y-4">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-2xl font-bold text-foreground">Featured Jobs</h2>
-              </div>
-              <FeaturedJobs />
+              {isSearching ? (
+                <>
+                  {/* Search Results Header */}
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h2 className="text-2xl font-bold text-foreground">Search Results</h2>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        {searchResults.length} job{searchResults.length !== 1 ? 's' : ''} found
+                        {activeSearch && <> for <span className="font-medium text-foreground">"{activeSearch}"</span></>}
+                        {activeLocation && <> in <span className="font-medium text-foreground">"{activeLocation}"</span></>}
+                      </p>
+                    </div>
+                    <Button variant="outline" size="sm" onClick={clearSearch} className="rounded-lg">
+                      <X className="h-3.5 w-3.5 mr-1.5" />
+                      Clear Search
+                    </Button>
+                  </div>
+
+                  {/* Search Results List */}
+                  {searchResults.length === 0 ? (
+                    <div className="bg-muted/30 border border-border rounded-2xl p-12 text-center">
+                      <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted/50 flex items-center justify-center">
+                        <SearchIcon className="h-7 w-7 text-muted-foreground" />
+                      </div>
+                      <h3 className="text-lg font-semibold text-foreground mb-2">No jobs found</h3>
+                      <p className="text-muted-foreground text-sm max-w-md mx-auto">
+                        We couldn't find any jobs matching your search. Try adjusting your keywords or location.
+                      </p>
+                      <Button variant="outline" className="mt-4 rounded-lg" onClick={clearSearch}>
+                        Browse All Jobs
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {searchResults.map((job) => (
+                        <div key={job.id} className="bg-background border border-border rounded-xl p-5 hover:shadow-lg hover:border-primary/50 transition-all duration-200">
+                          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                            <Link href={`/jobs/${job.id}`} className="flex-1 min-w-0 space-y-3">
+                              <div>
+                                <h3 className="text-xl font-bold text-foreground hover:text-primary transition-colors line-clamp-2 cursor-pointer mb-2">
+                                  {job.title}
+                                </h3>
+                                <p className="text-base text-muted-foreground flex items-center gap-2">
+                                  <Building className="h-4 w-4 flex-shrink-0" />
+                                  <span className="font-medium">{job.company_name}</span>
+                                </p>
+                              </div>
+                              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
+                                <span className="flex items-center gap-1.5">
+                                  <MapPin className="h-4 w-4 flex-shrink-0" />
+                                  <span>{job.location}</span>
+                                </span>
+                                {job.salary_text && (
+                                  <span className="flex items-center gap-1.5">
+                                    <BanknoteIcon className="h-4 w-4 flex-shrink-0" />
+                                    <span className="font-medium">{job.salary_text}</span>
+                                  </span>
+                                )}
+                                {job.posted_at && (
+                                  <span className="flex items-center gap-1.5">
+                                    <CalendarIcon className="h-4 w-4 flex-shrink-0" />
+                                    <span>Posted {formatDate(job.posted_at)}</span>
+                                  </span>
+                                )}
+                              </div>
+                              {job.description && (
+                                <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
+                                  {job.description}
+                                </p>
+                              )}
+                              <div className="flex items-center gap-2 pt-1">
+                                {job.job_type && (
+                                  <Badge variant={job.job_type === 'Full-time' ? 'default' : 'outline'} className="text-xs px-3 py-1">
+                                    {job.job_type}
+                                  </Badge>
+                                )}
+                                {job.experience_level && (
+                                  <Badge variant="outline" className="text-xs px-3 py-1">
+                                    {job.experience_level}
+                                  </Badge>
+                                )}
+                              </div>
+                            </Link>
+                            <div className="flex-shrink-0 sm:self-start">
+                              <Link href={`/jobs/${job.id}`}>
+                                <Button
+                                  size="default"
+                                  className="w-full sm:w-auto rounded-lg font-semibold px-6 py-2 shadow-sm hover:shadow-md transition-shadow"
+                                >
+                                  View Details
+                                </Button>
+                              </Link>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <>
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-2xl font-bold text-foreground">Featured Jobs</h2>
+                  </div>
+                  <FeaturedJobs />
+                </>
+              )}
             </div>
 
             {/* Profile Sidebar */}
