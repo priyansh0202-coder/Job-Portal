@@ -40,6 +40,19 @@ export async function login(loginPayload) {
     return res.data;
 }
 
+// Google OAuth Login
+// Backend sets HttpOnly cookie
+export async function googleLogin(idToken) {
+    const res = await apiInstance.post("/api/auth/google", { idToken });
+
+    if (res?.data?.user && typeof window !== "undefined") {
+        localStorage.setItem("user", JSON.stringify(res.data.user));
+        notifyAuthChanged();
+    }
+
+    return res.data;
+}
+
 //  Logout
 //  Backend clears cookie
 export async function logout() {

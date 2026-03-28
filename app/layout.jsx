@@ -4,6 +4,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { ThemeProvider } from '@/components/theme-provider';
 import Navbar from '@/components/navbar';
 import { AuthProvider } from '../context/AuthContext';
+import GoogleAuthWrapper from '@/components/GoogleAuthWrapper';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -21,7 +22,9 @@ export default function RootLayout({ children }) {
           <Navbar />
           <main className="min-h-screen pt-16">
             <AuthProvider>
-              {children}
+              <GoogleAuthWrapper>
+                {children}
+              </GoogleAuthWrapper>
             </AuthProvider>
           </main>
           <Toaster />

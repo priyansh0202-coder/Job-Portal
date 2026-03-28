@@ -18,14 +18,56 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BriefcaseIcon, LockIcon, MailIcon, UserIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
+import { GoogleLogin } from "@react-oauth/google";
 
-import { login, register } from "@/services/authService";
+import { login, register, googleLogin } from "@/services/authService";
 
 export default function AdminLoginPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const {setUser} = useAuth();
+
+  // Google Sign-In handler
+  const handleGoogleSuccess = async (credentialResponse) => {
+    setIsLoading(true);
+    try {
+      const data = await googleLogin(credentialResponse.credential);
+
+      if (typeof setUser === "function" && data?.user) {
+        setUser(data.user);
+      }
+
+      toast({
+        title: "Login successful",
+        description: `Welcome${data.user?.name ? `, ${data.user.name}` : ""}!`,
+      });
+
+      if (data.user?.role === "admin") {
+        router.push("/admin/dashboard");
+      } else {
+        router.push("/");
+      }
+    } catch (err) {
+      const msg =
+        err?.response?.data?.error || err?.message || "Google sign-in failed";
+      toast({
+        variant: "destructive",
+        title: "Google Sign-In failed",
+        description: msg,
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleError = () => {
+    toast({
+      variant: "destructive",
+      title: "Google Sign-In failed",
+      description: "Could not sign in with Google. Please try again.",
+    });
+  };
 
   const [loginData, setLoginData] = useState({
     email: "",
@@ -221,10 +263,32 @@ export default function AdminLoginPage() {
                     </div>
                   </div>
                 </CardContent>
-                <CardFooter>
+                <CardFooter className="flex flex-col gap-4">
                   <Button type="submit" className="w-full" disabled={isLoading}>
                     {isLoading ? "Signing in..." : "Sign In"}
                   </Button>
+
+                  <div className="relative w-full">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-card px-2 text-muted-foreground">
+                        Or continue with
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="w-full flex justify-center">
+                    <GoogleLogin
+                      onSuccess={handleGoogleSuccess}
+                      onError={handleGoogleError}
+                      theme="outline"
+                      size="large"
+                      width="100%"
+                      text="signin_with"
+                    />
+                  </div>
                 </CardFooter>
               </form>
             </Card>
@@ -318,10 +382,32 @@ export default function AdminLoginPage() {
                     </div>
                   )} */}
                 </CardContent>
-                <CardFooter>
+                <CardFooter className="flex flex-col gap-4">
                   <Button type="submit" className="w-full" disabled={isLoading}>
                     {isLoading ? "Creating Account..." : "Create Account"}
                   </Button>
+
+                  <div className="relative w-full">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-card px-2 text-muted-foreground">
+                        Or continue with
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="w-full flex justify-center">
+                    <GoogleLogin
+                      onSuccess={handleGoogleSuccess}
+                      onError={handleGoogleError}
+                      theme="outline"
+                      size="large"
+                      width="100%"
+                      text="signup_with"
+                    />
+                  </div>
                 </CardFooter>
               </form>
             </Card>
