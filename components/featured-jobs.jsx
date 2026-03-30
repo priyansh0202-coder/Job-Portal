@@ -104,19 +104,15 @@ export default function FeaturedJobs() {
             {/* Job Content - Left Side */}
             <Link href={`/jobs/${job.id}`} className="flex-1 min-w-0 space-y-3">
               <div>
-                {/* Job Title */}
                 <h3 className="text-xl font-bold text-foreground hover:text-primary transition-colors line-clamp-2 cursor-pointer mb-2">
                   {job.title}
                 </h3>
 
-                {/* Company Name */}
                 <p className="text-base text-muted-foreground flex items-center gap-2">
                   <BuildingIcon className="h-4 w-4 flex-shrink-0" />
                   <span className="font-medium">{job.company_name}</span>
                 </p>
               </div>
-
-              {/* Job Details */}
               <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
                 <span className="flex items-center gap-1.5">
                   <MapPinIcon className="h-4 w-4 flex-shrink-0" />
@@ -133,15 +129,12 @@ export default function FeaturedJobs() {
                   <span>Posted {formatDate(job.posted_at)}</span>
                 </span>
               </div>
-
-              {/* Job Description Preview */}
               {job.description && (
                 <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
                   {job.description}
                 </p>
               )}
 
-              {/* Job Type & Experience Badges */}
               <div className="flex items-center gap-2 pt-1">
                 {job.job_type && (
                   <Badge variant={job.job_type === "Full-time" ? "default" : "outline"} className="text-xs px-3 py-1">
@@ -155,8 +148,6 @@ export default function FeaturedJobs() {
                 )}
               </div>
             </Link>
-
-            {/* Apply Now Button - Right Side */}
             <div className="flex-shrink-0 sm:self-start">
               {appliedJobs[job.id] ? (
                 <Button
