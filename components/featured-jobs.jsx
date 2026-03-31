@@ -69,7 +69,6 @@ export default function FeaturedJobs() {
     return `${diffDays} days ago`;
   };
 
-  // 🔹 Show Skeleton while loading
   if (loading) {
     return (
       <div className="space-y-4">
