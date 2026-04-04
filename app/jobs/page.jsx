@@ -83,6 +83,7 @@ export default function JobsPage() {
         const data = await getJobs();
         const jobsArray = Array.isArray(data?.jobs) ? data.jobs : [];
         setJobs(jobsArray);
+        console.log("Jobs fetched:", jobsArray);
       } catch (err) {
         console.error("Failed to fetch jobs", err);
         setJobs([]);

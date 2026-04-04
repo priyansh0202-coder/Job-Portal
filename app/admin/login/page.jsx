@@ -80,7 +80,6 @@ export default function AdminLoginPage() {
     password: "",
   });
 
-  // Handle input changes
   const handleLoginChange = (e) => {
     const { name, value } = e.target;
     setLoginData((prev) => ({ ...prev, [name]: value }));
