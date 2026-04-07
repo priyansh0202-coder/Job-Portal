@@ -12,7 +12,6 @@ import { useRouter } from "next/navigation";
 import { getJobs, deleteJob } from "@/services/jobService";
 import { useAuth } from "@/context/AuthContext";
 
-/* ----------------------- helpers ----------------------- */
 
 const formatDate = (dateString) => {
   if (!dateString) return "Unknown";
@@ -37,7 +36,6 @@ function toNumberSafe(v) {
   return Number.isFinite(n) ? n : null;
 }
 
-/* ----------------------- component ----------------------- */
 
 export default function JobsPage() {
   const router = useRouter();
@@ -47,7 +45,6 @@ export default function JobsPage() {
   const [jobs, setJobs] = useState([]);
   const [deletingJobId, setDeletingJobId] = useState(null);
 
-  // Filters / search state
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [jobType, setJobType] = useState("all");
@@ -55,7 +52,6 @@ export default function JobsPage() {
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [experienceFilter, setExperienceFilter] = useState("all");
 
-  // Advanced filters (applied globally)
   const [companyFilter, setCompanyFilter] = useState("all");
   const [minSalaryFilter, setMinSalaryFilter] = useState("");
   const [maxSalaryFilter, setMaxSalaryFilter] = useState("");
@@ -64,7 +60,6 @@ export default function JobsPage() {
   const [remoteOnly, setRemoteOnly] = useState(false);
   const [postedWithin, setPostedWithin] = useState("any"); // options: any,1,7,30,90
 
-  // Modal state and its local copy of advanced filters
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalFilters, setModalFilters] = useState({
     company: "all",
@@ -76,7 +71,6 @@ export default function JobsPage() {
     postedWithin: "any",
   });
 
-  // load once
   useEffect(() => {
     const fetchJobs = async () => {
       try {
@@ -92,7 +86,6 @@ export default function JobsPage() {
     fetchJobs();
   }, []);
 
-  // Handler to delete a job (admin only)
   const handleDeleteJob = async (jobId, e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -103,7 +96,7 @@ export default function JobsPage() {
 
     try {
       setDeletingJobId(jobId);
-      await deleteJob(jobId, false); // soft delete by default
+      await deleteJob(jobId, false);
       // Remove from local state
       setJobs((prev) => prev.filter((j) => j.id !== jobId));
       alert("Job deleted successfully!");
@@ -115,20 +108,18 @@ export default function JobsPage() {
     }
   };
 
-  // Handler to navigate to edit page (admin only)
+ 
   const handleEditJob = (jobId, e) => {
     e.preventDefault();
     e.stopPropagation();
     router.push(`/admin/jobs/${jobId}/edit`);
   };
 
-  // debounce search (300ms)
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(search.trim().toLowerCase()), 300);
     return () => clearTimeout(t);
   }, [search]);
 
-  // unique lists used in selects (memoized)
   const { jobTypes, locations, categories, experiences, companies } = useMemo(() => {
     const jt = new Set();
     const loc = new Set();
@@ -156,7 +147,6 @@ export default function JobsPage() {
     };
   }, [jobs]);
 
-  // compute date cutoff for postedWithin
   const getPostedCutoff = (option) => {
     if (!option || option === "any") return null;
     const days = Number(option);
@@ -166,7 +156,6 @@ export default function JobsPage() {
     return now;
   };
 
-  // Core filtering logic (memoized)
   const filteredJobs = useMemo(() => {
     if (!Array.isArray(jobs)) return [];
 
@@ -175,7 +164,6 @@ export default function JobsPage() {
     const postedCutoff = getPostedCutoff(postedWithin);
 
     return jobs.filter((job) => {
-      // normalize fields
       const title = normalizeString(job.title ?? job.job_title);
       const company = normalizeString(job.company_name ?? job.company ?? job.employer);
       const category = normalizeString(job.category);

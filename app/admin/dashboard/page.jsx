@@ -86,6 +86,12 @@ export default function AdminDashboardPage() {
           <p className="text-muted-foreground">Manage your job postings and applications</p>
         </div>
         <div className="flex items-center space-x-4 mt-4 md:mt-0">
+          <Link href="/admin/applications">
+            <Button variant="outline" className="flex items-center gap-2">
+              <UsersIcon className="h-4 w-4" />
+              Applications
+            </Button>
+          </Link>
           <Link href="/admin/jobs/new">
             <Button className="flex items-center gap-2">
               <PlusIcon className="h-4 w-4" />
@@ -273,50 +279,31 @@ export default function AdminDashboardPage() {
 
         <TabsContent value="applications" className="space-y-6">
           <Card>
-            <CardHeader>
-              <CardTitle>Recent Applications</CardTitle>
-              <CardDescription>
-                Review and manage applications for your job postings
-              </CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle>Applications</CardTitle>
+                <CardDescription>
+                  Review and manage all submitted job applications
+                </CardDescription>
+              </div>
+              <Link href="/admin/applications">
+                <Button size="sm" className="flex items-center gap-2">
+                  <UsersIcon className="h-4 w-4" />
+                  View All Applications
+                </Button>
+              </Link>
             </CardHeader>
             <CardContent>
-              <div className="space-y-6">
-                {jobPostings.slice(0, 3).map((job) => (
-                  <div key={job.id}>
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="font-medium">{job.title}</h3>
-                      <Badge variant={job.status === "active" ? "default" : "secondary"}>
-                        {job.status === "active" ? "Active" : "Closed"}
-                      </Badge>
-                    </div>
-                    <div className="text-sm text-muted-foreground mb-4">
-                      {job.applications} applications • Posted on {formatDate(job.postedDate)}
-                    </div>
-                    <div className="space-y-3">
-                      {[...Array(3)].map((_, i) => (
-                        <div key={i} className="flex items-center justify-between p-3 border rounded-md">
-                          <div>
-                            <p className="font-medium">Applicant #{i + 1}</p>
-                            <p className="text-sm text-muted-foreground">Applied on {formatDate(new Date(new Date(job.postedDate).getTime() + (i + 1) * 86400000).toISOString().split('T')[0])}</p>
-                          </div>
-                          <Button variant="outline" size="sm">
-                            Review
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                    {job.applications > 3 && (
-                      <div className="mt-2 text-center">
-                        <Button variant="link" size="sm">
-                          View all {job.applications} applications
-                        </Button>
-                      </div>
-                    )}
-                    {job !== jobPostings.slice(0, 3)[jobPostings.slice(0, 3).length - 1] && (
-                      <Separator className="my-4" />
-                    )}
-                  </div>
-                ))}
+              <div className="py-8 text-center">
+                <UsersIcon className="h-12 w-12 mx-auto mb-4 text-muted-foreground/30" />
+                <p className="text-muted-foreground mb-4">
+                  View, search, and manage all applications from the dedicated applications page.
+                </p>
+                <Link href="/admin/applications">
+                  <Button variant="outline">
+                    Go to Applications
+                  </Button>
+                </Link>
               </div>
             </CardContent>
           </Card>

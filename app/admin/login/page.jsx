@@ -278,7 +278,7 @@ export default function AdminLoginPage() {
                     </div>
                   </div>
 
-                  <div className="w-full flex justify-center">
+                  <div className="w-full flex justify-center ">
                     <GoogleLogin
                       onSuccess={handleGoogleSuccess}
                       onError={handleGoogleError}
