@@ -223,14 +223,12 @@ export default function AdminApplicationDetailPage() {
         );
     };
 
-    // Helper to get minimum selectable date (today)
     const getMinDate = () => {
         const now = new Date();
         return now.toISOString().slice(0, 10);
     };
 
     const openInterviewPicker = () => {
-        // Pre-fill with tomorrow at 10:00 if no date is set
         if (!interviewDate) {
             const tomorrow = new Date();
             tomorrow.setDate(tomorrow.getDate() + 1);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,6 +19,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { getAdminCompanies } from "@/services/companyService";
 
 // Mock data for dashboard
 const jobPostings = [
@@ -77,6 +78,21 @@ const formatDate = (dateString) => {
 
 export default function AdminDashboardPage() {
   const [activeTab, setActiveTab] = useState("overview");
+  const [companiesCount, setCompaniesCount] = useState(0);
+
+  useEffect(() => {
+    const fetchCompaniesInfo = async () => {
+      try {
+        const data = await getAdminCompanies();
+        if (data && data.companies) {
+          setCompaniesCount(data.companies.length);
+        }
+      } catch (err) {
+        console.error("Failed to fetch companies info:", err);
+      }
+    };
+    fetchCompaniesInfo();
+  }, []);
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -145,13 +161,13 @@ export default function AdminDashboardPage() {
             </Card>
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Company Profile</CardTitle>
+                <CardTitle className="text-sm font-medium">Total Companies</CardTitle>
                 <BuildingIcon className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">TechCorp</div>
+                <div className="text-2xl font-bold">{companiesCount}</div>
                 <p className="text-xs text-muted-foreground">
-                  Profile 85% complete
+                  Registered in system
                 </p>
               </CardContent>
             </Card>

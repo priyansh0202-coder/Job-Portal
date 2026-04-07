@@ -113,6 +113,7 @@ export default function AdminApplicationsPage() {
             const data = await getAdminApplications(filters);
             const apps = data.applications || [];
             setApplications(apps);
+            console.log("Applications fetched:", data);
             setHasMore(apps.length === ITEMS_PER_PAGE);
         } catch (err) {
             console.error("Failed to fetch applications:", err);
