@@ -21,6 +21,7 @@ export default function CompaniesPage() {
         const data = await getAdminCompanies();
         if (data && data.companies) {
           setCompanies(data.companies);
+          console.log(data.companies);
         }
       } catch (err) {
         console.error("Failed to fetch companies:", err);
